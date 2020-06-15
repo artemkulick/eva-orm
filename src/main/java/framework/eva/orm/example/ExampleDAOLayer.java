@@ -33,10 +33,6 @@ public class ExampleDAOLayer {
         return Completable.defer(() -> USER_TABLE
                 .update(
                         USER_NAME_COLUMN.to(user.name),
-                        USER_EMAIL_COLUMN.to(user.email),
-                        USER_EMAIL_COLUMN.to(user.email),
-                        USER_EMAIL_COLUMN.to(user.email),
-                        USER_EMAIL_COLUMN.to(user.email),
                         USER_EMAIL_COLUMN.to(user.email)
                 )
                 .withCondition(USER_ID_COLUMN.eq(user.id))
