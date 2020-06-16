@@ -3,9 +3,10 @@
 EVA ORM is part of an EVA project that provides the ability to create fully asynchronous reactive services with a minimum of dependencies. 
 
 ### At the moment, the project provides (Version 0.1-ALPHA):
- - CRUD operations to the database;
+- CRUD operations to the database;
 - Transactional;
 - Configuring TOMCAT and DBCP pools - Apache Jakarta Commons DBCP (Database connection pooling services)
+- Parametization row in tables by POJO class.
 
 ### At the moment, the project supports only the MySQL database
 
@@ -19,7 +20,6 @@ package framework.eva.orm.example;
 
 import framework.eva.orm.communication.Transaction;
 import framework.eva.orm.table.Column;
-import framework.eva.orm.table.Row;
 import framework.eva.orm.table.Table;
 import framework.eva.orm.table.TableCreator;
 import io.reactivex.Completable;
@@ -35,7 +35,7 @@ public class ExampleDAOLayer {
             .addPrimaryColumn(USER_ID_COLUMN)
             .addColumn(USER_NAME_COLUMN)
             .addColumn(USER_EMAIL_COLUMN)
-            .addBuilder(ExampleDAOLayer::mapUser)
+            .parameterization(User.class) //for serialization by reflection
             .done();
 
     public ExampleDAOLayer() {
@@ -50,26 +50,16 @@ public class ExampleDAOLayer {
         return Completable.defer(() -> USER_TABLE
                 .update(
                         USER_NAME_COLUMN.to(user.name),
-                        USER_EMAIL_COLUMN.to(user.email),
-                        USER_EMAIL_COLUMN.to(user.email),
-                        USER_EMAIL_COLUMN.to(user.email),
-                        USER_EMAIL_COLUMN.to(user.email),
                         USER_EMAIL_COLUMN.to(user.email)
                 )
                 .withCondition(USER_ID_COLUMN.eq(user.id))
                 .buildCRx(transaction)
         );
     }
-
-    private static User mapUser(Row row) {
-        User user = new User();
-        user.id = row.getValue(USER_ID_COLUMN);
-        user.name = row.getValue(USER_NAME_COLUMN);
-        user.email = row.getValue(USER_EMAIL_COLUMN);
-        return user;
-    }
 }
 ```
+If you want build object manually - use `.addBuilder()` method on TableCreator.
+
 
 EVA ORM provides classes for mapping database tables into DAO layer:
  - [`framework.eva.orm.table.Table`]
