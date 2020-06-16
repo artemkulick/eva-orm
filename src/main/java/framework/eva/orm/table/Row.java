@@ -1,66 +1,71 @@
 package framework.eva.orm.table;
 
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class Row
-{
+public class Row {
     private HashMap<String, Object> results;
 
-    private Row(HashMap<String, Object> results)
-    {
+    private Row(HashMap<String, Object> results) {
         this.results = results;
     }
 
-    public static Row create(ResultSet resultSet, List<Column> columns) throws SQLException
-    {
+    public static Row create(ResultSet resultSet, List<Column> columns) throws SQLException {
         HashMap<String, Object> results = new HashMap<>();
-        for (Column column : columns)
-        {
+        for (Column column : columns) {
             Object value = null;
-            switch (column.columnType)
-            {
-            case UUID:
-                value = UUID.fromString(resultSet.getString(column.columnName));
-                break;
-            case INTEGER:
-                value = resultSet.getInt(column.columnName);
-                break;
-            case STRING:
-                value = resultSet.getString(column.columnName);
-                break;
-            case LONG:
-                value = resultSet.getLong(column.columnName);
-                break;
-            case DOUBLE:
-                value = resultSet.getDouble(column.columnName);
-                break;
-            case BYTE:
-                value = resultSet.getByte(column.columnName);
-                break;
-            case ENUM:
-                value = resultSet.getString(column.columnName);
-                break;
+            switch (column.columnType) {
+                case UUID:
+                    value = UUID.fromString(resultSet.getString(column.columnName));
+                    break;
+                case INTEGER:
+                    value = resultSet.getInt(column.columnName);
+                    break;
+                case STRING:
+                    value = resultSet.getString(column.columnName);
+                    break;
+                case LONG:
+                    value = resultSet.getLong(column.columnName);
+                    break;
+                case DOUBLE:
+                    value = resultSet.getDouble(column.columnName);
+                    break;
+                case BYTE:
+                    value = resultSet.getByte(column.columnName);
+                    break;
+                case ENUM:
+                    value = resultSet.getString(column.columnName);
+                    break;
             }
             results.put(column.columnName, value);
         }
         return new Row(results);
     }
 
-    public <T> T getValue(Column<T> column)
-    {
+    public <T> T getValue(Column<T> column) {
         Object o = results.get(column.columnName);
-        if (o != null)
-        {
+        if (o != null) {
             return column.getValue(o);
-        }
-        else
-        {
+        } else {
             return null;
         }
+    }
+
+    public <T> T cast(Class<T> clazz) throws IllegalAccessException, InstantiationException {
+
+
+        T dto = clazz.newInstance();
+        for (Field field : clazz.getDeclaredFields()) {
+            String name = field.getName();
+            Object value = results.get(name);
+            field.setAccessible(true);
+            field.set(dto, value);
+        }
+        return dto;
     }
 }

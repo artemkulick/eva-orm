@@ -18,10 +18,11 @@ public class SqlSelectBuilder<T> extends SqlBuilderImpl<T> {
     private static final String FROM = "FROM";
     private final Function<Row, T> builderFunction;
     private final UnsafeFunction<Row, T> unsafeFunction;
+    private final Class<T> clazz;
     private String fields;
     private Table table;
 
-    private SqlSelectBuilder(Table table, List<Column> selectedColumns, Function<Row, T> builderFunction, UnsafeFunction<Row, T> unsafeFunction) {
+    private SqlSelectBuilder(Table table, List<Column> selectedColumns, Function<Row, T> builderFunction, UnsafeFunction<Row, T> unsafeFunction, Class<T> clazz) {
         super(selectedColumns);
         if (selectedColumns.size() == 1) {
             setField(selectedColumns.get(0));
@@ -43,10 +44,11 @@ public class SqlSelectBuilder<T> extends SqlBuilderImpl<T> {
         this.table = table;
         this.builderFunction = builderFunction;
         this.unsafeFunction = unsafeFunction;
+        this.clazz = clazz;
     }
 
-    public static <T> SqlSelectBuilder<T> create(Table table, List<Column> selectedColumns, Function<Row, T> builderFunction, UnsafeFunction<Row, T> unsafeFunction) {
-        return new SqlSelectBuilder<>(table, selectedColumns, builderFunction, unsafeFunction);
+    public static <T> SqlSelectBuilder<T> create(Table table, List<Column> selectedColumns, Function<Row, T> builderFunction, UnsafeFunction<Row, T> unsafeFunction, Class<T> clazz) {
+        return new SqlSelectBuilder<>(table, selectedColumns, builderFunction, unsafeFunction, clazz);
     }
 
     @Override
@@ -94,11 +96,14 @@ public class SqlSelectBuilder<T> extends SqlBuilderImpl<T> {
     @Override
     public Observable<T> buildTypedORx(Transaction transaction) {
         return transaction.wrapORx(this).map(row -> {
-            if (builderFunction != null) {
+            if (builderFunction != null)
                 return builderFunction.apply(row);
-            } else {
+            if (unsafeFunction != null)
                 return unsafeFunction.apply(row);
-            }
+            if (clazz != null)
+                return row.cast(clazz);
+            else
+                throw new RuntimeException("Not found type map function.");
         });
     }
 

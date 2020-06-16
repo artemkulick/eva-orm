@@ -14,6 +14,7 @@ public class Table<V> {
     private List<Column> columns = new LinkedList<>();
     private Function<Row, V> builderFunction;
     private UnsafeFunction<Row, V> unsafeBuilderFunction;
+    private Class<V> clazz;
     private Column<?> primaryColumn;
 
     Table(String name) {
@@ -25,7 +26,7 @@ public class Table<V> {
     }
 
     public SqlSelectBuilder<V> select() {
-        return SqlSelectBuilder.create(this, Collections.emptyList(), builderFunction, unsafeBuilderFunction);
+        return SqlSelectBuilder.create(this, Collections.emptyList(), builderFunction, unsafeBuilderFunction, clazz);
     }
 
     public SqlSelectBuilder<V> select(Column column) {
@@ -34,7 +35,7 @@ public class Table<V> {
 
 
     public SqlSelectBuilder<V> select(List<Column> columns) {
-        return SqlSelectBuilder.create(this, columns, null, null);
+        return SqlSelectBuilder.create(this, columns, null, null, null);
     }
 
     public SqlInsertBuilder<V> insert(SqlBuilderImpl.Assignment... assignments) {
@@ -93,6 +94,11 @@ public class Table<V> {
 
         public Setup addUnsafeBuilder(UnsafeFunction<Row, V> function) {
             unsafeBuilderFunction = function;
+            return this;
+        }
+
+        public Setup parameterization(Class<V> c) {
+            clazz = c;
             return this;
         }
     }

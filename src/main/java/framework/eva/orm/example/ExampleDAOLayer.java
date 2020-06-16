@@ -18,7 +18,8 @@ public class ExampleDAOLayer {
             .addPrimaryColumn(USER_ID_COLUMN)
             .addColumn(USER_NAME_COLUMN)
             .addColumn(USER_EMAIL_COLUMN)
-            .addBuilder(ExampleDAOLayer::mapUser)
+            .parameterization(User.class) //for serialization by reflection
+            .addBuilder(ExampleDAOLayer::mapUser) //for custom mapping
             .done();
 
     public ExampleDAOLayer() {
